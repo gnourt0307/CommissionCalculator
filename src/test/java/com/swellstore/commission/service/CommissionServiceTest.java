@@ -29,10 +29,8 @@ class CommissionServiceTest {
                 new CommissionRequest(salary, customer, item, price));
     }
 
-    // ====================================================================
     // RULE R1 — Standard item always yields $0.00
     // Covers: VP1, VP2, VP3, VP4, VP5, VP8, VP9, VP10
-    // ====================================================================
 
     @Test
     @DisplayName("R1 | salaried + regular + standard + $500 → $0.00")
@@ -52,10 +50,8 @@ class CommissionServiceTest {
         assertEquals(0.0, calc("non-salaried", "non-regular", "standard", 99999.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R2 — Regular customer always yields $0.00  (non-standard items)
     // Covers: VP1, VP2, VP3, VP6, VP7, VP8, VP9
-    // ====================================================================
 
     @Test
     @DisplayName("R2 | salaried + regular + bonus + $500 → $0.00")
@@ -75,10 +71,8 @@ class CommissionServiceTest {
         assertEquals(0.0, calc("salaried", "regular", "other", 50000.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R3 — Salaried + non-regular + bonus + price ≤ $1,000 → 5%
     // Covers: VP1, VP4, VP6, VP8, VB2
-    // ====================================================================
 
     @Test
     @DisplayName("R3 | salaried + non-regular + bonus + $500 → $25.00  (5%)")
@@ -99,10 +93,8 @@ class CommissionServiceTest {
         assertEquals(50.0, calc("salaried", "non-regular", "bonus", 1000.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R4 — Salaried + non-regular + bonus + price > $1,000 → $25.00 flat
     // Covers: VP1, VP4, VP6, VP9, VB3
-    // ====================================================================
 
     @Test
     @DisplayName("R4 | salaried + non-regular + bonus + $1,500 → $25.00 flat")
@@ -122,10 +114,8 @@ class CommissionServiceTest {
         assertEquals(25.0, calc("salaried", "non-regular", "bonus", 999999.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R5 — Non-salaried + non-regular + bonus + price ≤ $1,000 → 10%
     // Covers: VP2, VP4, VP6, VP8, VB2
-    // ====================================================================
 
     @Test
     @DisplayName("R5 | non-salaried + non-regular + bonus + $500 → $50.00  (10%)")
@@ -146,10 +136,8 @@ class CommissionServiceTest {
         assertEquals(100.0, calc("non-salaried", "non-regular", "bonus", 1000.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R6 — Non-salaried + non-regular + bonus + price > $1,000 → $75.00 flat
     // Covers: VP2, VP4, VP6, VP9, VB3
-    // ====================================================================
 
     @Test
     @DisplayName("R6 | non-salaried + non-regular + bonus + $1,500 → $75.00 flat")
@@ -169,10 +157,8 @@ class CommissionServiceTest {
         assertEquals(75.0, calc("non-salaried", "non-regular", "bonus", 999999.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R7 — Non-salaried + non-regular + other + price ≤ $10,000 → 10%
     // Covers: VP2, VP4, VP7, VP9, VB4
-    // ====================================================================
 
     @Test
     @DisplayName("R7 | non-salaried + non-regular + other + $5,000 → $500.00  (10%)")
@@ -193,10 +179,8 @@ class CommissionServiceTest {
         assertEquals(0.001, calc("non-salaried", "non-regular", "other", 0.01), DELTA);
     }
 
-    // ====================================================================
     // RULE R8 — Non-salaried + non-regular + other + price > $10,000 → 5%
     // Covers: VP2, VP4, VP7, VP10, VB5
-    // ====================================================================
 
     @Test
     @DisplayName("R8 | non-salaried + non-regular + other + $15,000 → $750.00  (5%)")
@@ -216,10 +200,8 @@ class CommissionServiceTest {
         assertEquals(50000.0, calc("non-salaried", "non-regular", "other", 1000000.0), DELTA);
     }
 
-    // ====================================================================
     // RULE R9 — Salaried + non-regular + other → $0.00 (policy silent)
     // Covers: VP1, VP4, VP7, VP8, VP9, VP10
-    // ====================================================================
 
     @Test
     @DisplayName("R9 | salaried + non-regular + other + $5,000 → $0.00")
@@ -233,9 +215,7 @@ class CommissionServiceTest {
         assertEquals(0.0, calc("salaried", "non-regular", "other", 99999.0), DELTA);
     }
 
-    // ====================================================================
     // RULE-PRIORITY EDGE CASES
-    // ====================================================================
 
     @Test
     @DisplayName("Priority: R1 (standard) beats R2 (regular) — standard always wins")
