@@ -36,7 +36,6 @@ public class CommissionService {
     private static final double NONSALARIED_BONUS_PCT  = 0.10;
     private static final double NONSALARIED_BONUS_FLAT = 75.0;
     private static final double NONSALARIED_OTHER_LOW  = 0.10;
-    private static final double NONSALARIED_OTHER_HIGH = 0.05;
 
     // Utility class — no instantiation needed.
     private CommissionService() {}
@@ -99,7 +98,7 @@ public class CommissionService {
                 }
                 // R8: non-salaried, other, price > 10000 → 5%
                 else {
-                    return req.getItemPrice() * NONSALARIED_OTHER_HIGH;
+                    return req.getItemPrice() * SALARIED_BONUS_PCT  ;
                 }
 
             } else {

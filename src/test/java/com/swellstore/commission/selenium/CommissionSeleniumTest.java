@@ -65,7 +65,7 @@ public class CommissionSeleniumTest {
         }
     }
 
-    @BeforeEach
+    @BeforeEach 
     void openForm() {
         driver.get(INDEX_URL);
     }
