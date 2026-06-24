@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.swellstore</groupId>
+    <artifactId>swell-commission</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>Swell Store Commission Calculator</name>
+
+    <properties>
+        <maven.compiler.source>16</maven.compiler.source>
+        <maven.compiler.target>16</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Single place to control the JaCoCo version -->
+        <jacoco.version>0.8.11</jacoco.version>
+    </properties>
+
+    <dependencies>
+        <!-- Servlet API (provided by Jetty at runtime) -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- JUnit 5 — unit tests (CommissionServiceTest) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Selenium WebDriver — UI tests (CommissionSeleniumTest) -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.18.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>swell-commission</finalName>
+        <plugins>
+
+            <!-- ① WAR packaging -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <failOnMissingWebXml>true</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+
+            <!-- ② Embedded Jetty dev server -->
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>11.0.15</version>
+            </plugin>
+
+            <!-- ③ Java compiler — explicit version, aligned with <properties> -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+
+            <!-- ④ Surefire — JUnit 5 runner (required for JUnit Platform) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <!--
+                        Exclude Selenium tests from the normal unit-test phase.
+                        Selenium tests require a running server; run them separately
+                        with:  mvn test -Dtest=CommissionSeleniumTest
+                    -->
+                    <excludes>
+                        <exclude>**/selenium/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- ⑤ JaCoCo — code coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+
+                    <!--
+                        GOAL 1: prepare-agent
+                        Binds to the "initialize" phase (runs before "test").
+                        Injects the JaCoCo Java agent into the JVM that runs
+                        the tests by adding -javaagent:... to the argLine property
+                        that Surefire reads.  This is what records which bytecode
+                        instructions are hit during the test run.
+                    -->
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <!--
+                                Tell the JaCoCo runtime agent to skip JDK-internal
+                                classes (sun.*, com.sun.*, jdk.*).  These are compiled
+                                at whatever Java version runs Maven (here Java 26,
+                                class-file major version 70) which is newer than what
+                                JaCoCo 0.8.11 / ASM 9.6 can parse.  Excluding them
+                                silences the harmless IllegalClassFormatException
+                                warnings without affecting our application's coverage.
+                            -->
+                            <excludes>
+                                <exclude>sun/**</exclude>
+                                <exclude>com/sun/**</exclude>
+                                <exclude>jdk/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+
+                    <!--
+                        GOAL 2: report
+                        Binds to the "test" phase (runs after tests complete).
+                        Reads the binary coverage data file produced by the agent
+                        (target/jacoco.exec) and produces:
+                          • HTML report  →  target/site/jacoco/index.html
+                          • XML  report  →  target/site/jacoco/jacoco.xml
+                          • CSV  report  →  target/site/jacoco/jacoco.csv
+                    -->
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                            <formats>
+                                <format>HTML</format>
+                                <format>XML</format>
+                            </formats>
+                            <!--
+                                Exclusions — classes that should NOT be counted
+                                toward coverage metrics:
+
+                                • CommissionRequest  (model/DTO)
+                                  A plain immutable data carrier with no logic;
+                                  measuring getter coverage adds noise without value.
+
+                                • CommissionServlet  (servlet / controller layer)
+                                  The servlet depends on the HTTP container.
+                                  Its request-handling flow is covered by Selenium
+                                  integration tests, NOT by the pure JUnit unit tests.
+                                  Excluding it keeps the unit-test coverage report
+                                  focused on the business-logic layer (CommissionService).
+                                  Remove this exclusion if you run Surefire with Selenium.
+                            -->
+                            <excludes>
+                                <exclude>com/swellstore/commission/model/CommissionRequest.class</exclude>
+                                <exclude>com/swellstore/commission/servlet/CommissionServlet.class</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
